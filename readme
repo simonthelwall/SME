@@ -1,0 +1,8 @@
+These are a bunch of files for the Statisital Methods in Epidemiology for the MSc Epidemiology at the London School 
+of Hygiene and Tropical Medicine.
+
+
+SME assignment
+The master file (final_report3.Rnw) holds the text and setup. Two sourced files (epic3.R) and (regress.R) are called
+by the master file. Running the master file produces the final tex document which can be run through latex to produce 
+the pdf of the report. 
