@@ -1,0 +1,167 @@
+\documentclass[11pt,a4paper,twoside]{article}
+\title{SME assignment}
+\author{Student number: 106936}
+\usepackage{booktabs}
+\usepackage{xspace}
+\usepackage{amsmath}%
+\usepackage{amsfonts}
+\usepackage{amssymb}
+%\usepackage{graphicx}
+\usepackage[bottom=2cm,margin=2.5cm]{geometry}
+\usepackage{lmodern}
+\usepackage{rotating}
+\usepackage[T1]{fontenc}
+\usepackage{fancyhdr}
+\fancyhead{}
+\fancyfoot{}
+\setlength{\headheight}{15.2pt}
+%\setlength{\footskip=20pt}
+\pagestyle{fancy}
+\lhead[\thepage]{Student 106936}
+\chead[ SME assignment]{SME assignment}
+\rhead[ Student 106936]{\thepage}
+\usepackage[compact]{titlesec}
+\titleformat*{\section}{\large\bfseries}
+\makeatletter
+\newcommand\gobblepars{%
+    \@ifnextchar\par%
+        {\expandafter\gobblepars\@gobble}%
+        {}}
+\makeatother
+\begin{document}
+\section{Methods}
+The primary outcome was whether a worker started treatment for tuberculosis and the primary exposure was a worker's silicosis status. Both were treated as binary variables. 
+Age and years in the workforce were treated as ordered categorical variables. 
+Workers' country of origin was treated as an unordered categorical variable. Silicosis, employment grade, place of residence, previous tuberculosis and tuberculosis status were all treated as binary variables. \\
+\indent Variables with missing data were identified using tabulation. Records with missing data were excluded from multivariable logistic regression models if those models included variables where data were missing. \\
+\indent Associations between pairs of variables were explored with univariate logistic regression or $\chi^2$ test as appropriate. 
+The effect of a third factor on the relationship between two others was examined using the Mantel-Haenszel method for stratification.
+Multivariable logistic regression was used to examine the association between silicosis and tuberculosis, adjusting for additional factors. The outcome variable was tuberculosis. \\ \indent
+The effect of age as a linear relationship with odds of developing tuberculosis was not investigated as insufficient information was available regarding the age of the mine workers.\\ \indent 
+All analyses were performed in \Sexpr{substring(R.version.string,1,16)}.\\
+<<setup, results='asis',echo=FALSE, message=FALSE>>=
+library(xtable)
+library(epitools)
+library(epicalc)
+library(rms)
+library(ggplot2)
+library(plyr)
+library(foreign)
+#setwd("/home/simon/Documents/MSc_modules/SME/assignment")
+setwd("E:\\My Documents B\\MSc stuff\\SME")
+p_wrapper<-function(x){
+  round(with(x,pchisq(null.deviance - deviance,df.null-df.residual,lower.tail=FALSE)),3)
+}
+or_wrapper<-function(x){
+  cbind(OR=exp(coef(x)),exp(confint(x)),p_val=round(summary(x)$coefficients[,4],6))
+}
+decimal2<-function(x){paste(x,".00",sep="")} # decimal replacer for character strings, 2 decimal places
+decimal1<-function(x){paste(x,"0",sep="")} # decimal replacer for character strings, 1 decimal place
+simpleCap<-function(x){
+  s<-as.character(x)
+  s<-paste(toupper(substring(s,1,1)),substring(s,2),sep="")
+#  s<-as.factor(s)
+}
+df<-read.csv("SMEassignment.csv",header=TRUE, sep=",",quote="\"",stringsAsFactors=FALSE)
+df$obs<-1
+#df$yrsindcat3<-factor(df$yrsindcat3,levels=c("<15yrs","15-24","25+"),ordered=TRUE)
+df$tb2<-0
+df$tb2[df$tb=="TB"]<-1
+df$tb2[df$tb=="no TB"]<-0
+df$previoustb[df$previoustb==""]<-"Missing"
+df$agecat3[df$agecat3=="<35yrs"]<-"<35"
+df$yrsindcat[df$yrsindcat=="<15yrs"]<-"<15"
+@
+\section{Results}
+A total of \Sexpr{sum(df$obs)} workers were recruited to the cohort. Of these, \Sexpr{sum(df$obs[df$silicosis=="probable"])} (\Sexpr{round((sum(df$obs[df$silicosis=="probable"])/sum(df$obs))*100,2)} \%) had silicosis and, at two years of follow up, \Sexpr{sum(df$obs[df$tb2==1])} (\Sexpr{round((sum(df$obs[df$tb2==1])/sum(df$obs))*100,2)} \%) started treatment for tuberculosis.\\ \indent
+Data for previous history of tuberculosis were missing for \Sexpr{sum(df$obs[df$previoustb=="Missing"])} (\Sexpr{round((sum(df$obs[df$previoustb=="Missing"])/sum(df$obs))*100,2)} \%) workers. 
+For those missing data, \Sexpr{sum(df$obs[df$previoustb=="Missing" & df$tb2==1])} developed tuberculosis. 
+There was no evidence of a difference in distribution of silicosis for workers with or without data for previous tuberculosis ($\chi^2$ p = 0.36) or that there was any difference in distribution of tuberculosis between these groups ($\chi^2$ p = 0.22). \\ \indent
+Age and period in workforce were strongly correlated. 
+99.24 \% of workers less than 35 years old had been part of the workforce for less than 15 years. 
+74.49 \% of workers over 45 years old had been part of the workforce for greater than 25 years. \\ \indent 
+In univariate analyses, the odds of developing tuberculosis was two fold greater in workers with probable silicosis compared to those with no or possible silicosis (OR = 2.00, 95 \% confidence interval (CI) = 1.28-3.03, table \ref{epic}). 
+The odds of tuberculosis also increased with increasing age. 
+Workers 35 to 44 years old were nearly two fold more likely to develop tuberculosis compared to workers under 35 years of age (OR = 1.92, 95\% CI = 1.11-3.50) and workers greater than 45 years old were more than two fold more likely to develop tuberculosis than workers 35 years old.\\ \indent
+There was also strong evidence of association between hostel accommodation (OR = 1.52, 95 \% CI = 1.07-1.91) and working at mine site B (OR = 1.74, 95 \% CI = 1.24-2.46) and increased odds of starting treatment for tuberculosis. 
+The odds of starting treatment for tuberculosis also varied by worker's  country of origin. Workers from Lesotho were 1.5 times more likely to start treatment for tuberculosis than workers from South Africa (OR = 1.52, 95 \% CI = 1.04 - 2.19) whereas there was no evidence for a difference in odds for workers from Mozambique compared to workers from South Africa (OR = 0.71, 95 \% CI = 0.41-1.19).\\ \indent
+To examine the effect of each variable on the association between silicosis and tuberculosis, stratified analyses were performed. 
+The odds ratio for the association between silicosis and tuberculosis were reduced by age (combined OR = 1.79, 95 \% CI = 1.15-2.79, table \ref{mhtab}), years in the workforce (combined OR = 1.80, 95 \% CI = 1.15-2.81) and by mine site (OR = 1.85, 95 \% CI = 1.20-2.86). 
+The Mantel-Haenzsel test of homogeneity revealed some evidence of an interaction between the worker's country of origin and the association between silicosis and tuberculosis (p = 0.119). \\ \indent
+Since all measured variables were associated with both silicosis and tuberculosis, a maximal logistic regression model was fit to adjust for these factors. 
+Because of the interaction between worker's country of origin and the relationship silicosis and tuberculosis, this model included an interaction term. 
+Because of the correlation between a worker's age and the length of time they had been on the workforce, the length of time was excluded from the model. 
+After adjustment for confounding, silicosis was associated with a greater than three fold increase in odds of tuberculosis for workers from Mozambique (OR = 3.26, 95 \% CI = 1.09-9.75, table \ref{reg}) and a greater than two fold increase in odds of tuberculosis for workers from South Africa (OR = 2.01, 95 \% CI = 1.07-3.77). 
+There was no evidence of a relationship between silicosis and tuberculosis for workers from Lesotho (OR = 0.99 95 \% CI = 0.46-2.11).
+
+\section{Discussion}
+ The data presented here suggest an association between silicosis and the odds of starting treatment for tuberculosis. \\ \indent
+ Errors in epidemiologic studies may occur due to chance, confounding or bias. The study population was 3206 workers which is a reasonable size. 
+ Given this size and the fact that the confidence intervals for workers from Mozambique and South Africa do not include the value of no effect, it is not likely that chance explains the result.  \\ \indent
+ A number of potential confounders were measured. 
+ Each factor was associated with both tuberculosis and silicosis, and was considered \textit{a priori} a potential confounder. 
+ Period in workforce was highly correlated with age and so was excluded from the multivariable analysis.
+ Thus, a maximal multivariable regression model was constructed including every potential confounder, with the exception of period in workforce. 
+ The association between silicosis and tuberculosis persisted after adjusting for confounders for workers from South Africa and Mozambique. 
+This suggests that the association between silicosis and tuberculosis is not fully explained by confounding as measured by these variables. Residual confounding in unmeasured variables may reduce the strength of association. 
+It is likely that country of origin acts as a proxy for an unknown factor which varies in prevalence by country. 
+A factor that was a very strong risk for tuberculosis and particularly prevalent in Lesotho, such as HIV, could explain why no association between silicosis and tuberculosis was observed for these workers. \\ \indent
+The inclusion of previous tuberculosis as a confounder may be problematic as it may lie on the causal pathway. 
+Silicosis could cause reactivation of dormant tuberculosis bacteria and lead to tuberculosis treatment.
+This would result in over-adjustment and bias the association towards the null. 
+Alternatively, silicosis may lie between previous tuberculosis and starting treatment on the causal pathway. 
+In this scenario, prior tuberculosis could cause lung damage, leading to greater silicosis and increase the risk of tuberculosis. 
+The latter scenario was judged to be more biologically plausible and so previous tuberculosis was included in the final model. \\ \indent
+Microbiological confirmation of tuberculosis was only available for 70 \% of workers who started treatment. 
+That could mean that actual cases of tuberculosis was overestimated by 30 \%. 
+If this over-estimation was non-differential, i.e. greater in either those with or without silicosis, it could bias the association. 
+A differential over-estimation to workers with silicosis would bias the association away from the null and a differential over-estimation to workers without silicosis would bias the association towards the null. \\ \indent
+The hypothesis that silicosis is a risk factor for tuberculosis has a number of arguments in its favour. 
+It is temporal; in this study silicosis precedes treatment for tuberculosis.
+It is biologically plausible; lung damage and inflammation caused by silicosis may make it easier for \textit{Mycobacteria} to infect a worker. 
+There is also reasonable strength of association; after adjusting for other factors, in workers from Mozambique, silicosis is associated with a more than three-fold increase in the odds of treatment for tuberculosis. 
+However, further information is required before we can confidently claim causation. 
+Information regarding the degree of silicosis and its relation to odds of starting treatment could provide evidence of a dose-response relationship. 
+Experimental evidence in animal models could also provide support for the hypothesis. \\ \indent
+In conclusion, based on the evidence provided in this analysis, it is likely that silicosis increases the risk of tuberculosis, but further work is required to confirm that.
+%The fact that the odds ratio for the association in workers from Lesotho is very close to 1 suggests that residual confounding may explain the result. 
+
+\gobblepars
+<<external, echo=FALSE,results='asis',message=FALSE>>=
+source("epic3.R")
+@
+\gobblepars
+\pagebreak[4]
+<<printTab1, echo=FALSE, results='asis'>>=
+align(out1)<-"lllrrrrrrr"
+print(out1,booktabs=TRUE,include.rownames=FALSE,size="small",floating.environment='sidewaystable',table.placement="p")
+@
+\pagebreak[4]
+\begin{table}[p]
+\begin{tabular}{llrrr}
+\toprule 
+Risk factor & Stratum & \shortstack{Combined odds \\ratio} & \shortstack{Stratum specific \\odds ratio} & \shortstack{p-value for \\interaction*} \\  
+\midrule
+Age &  & 1.79 (1.15-2.79) &  & 0.659 \\  
+Years in industry &  & 1.80 (1.15-2.81) &  & 0.204 \\  
+Job grade &  & 1.96 (1.27-3.01) &  & 0.563 \\  
+Accommodation &  & 1.91 (1.24-2.93) &  & 0.308 \\  
+Mine &  & 1.85 (1.20-2.86) &  & 0.988 \\  
+Country of origin & Lesotho &  & 1.13 (0.47-2.43) & \multicolumn{1}{l}{} \\  
+ & Mozambique &  & 4.10 (1.09-13.13) & 0.119 \\ 
+ & South Aftica &  & 1.88 (1.22-2.88) & \multicolumn{1}{l}{} \\ 
+\shortstack{Previous history \\ of TB} &  & 2.02 (1.31 - 3.13) &  & 0.773 \\ 
+\bottomrule
+\end{tabular}
+\caption{Mantel-Haenszel odds ratios for association between silicosis and tuberculosis. Male mine workers in South Africa, 2006. *$\chi^2$ test of homogeneity.}
+\label{mhtab}
+\end{table}
+\pagebreak[4]
+\clearpage
+<<external2,echo=FALSE,results='asis',message=FALSE,warning=FALSE>>=
+source("regress.R")
+# ddist warns that NAs introduced by coercion. Hope this doesn't matter. 
+align(reg_out)<-"lllr"
+print(reg_out,booktabs=TRUE,include.rownames=FALSE,table.placement="p")
+@
+\end{document}
